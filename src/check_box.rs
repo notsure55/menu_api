@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::{ Rect, Menu, Vertex, Vec4 };
+use crate::{ Rect, Menu, Vertex, Vec4, Draw, InBounds, Hovering };
 
 use glium::{ Surface, uniform, Frame };
 
@@ -23,7 +23,43 @@ impl CheckBox {
         let mut value = self.toggle.borrow_mut();
         *value = !*value;
     }
-    pub fn draw(&self, menu: &mut Menu, frame: &mut Frame) {
+}
+
+impl InBounds for CheckBox {
+    fn in_bounds(
+        &self,
+        menu: &Menu
+    ) -> bool {
+        if menu.mouse_pos.0 < self.rect.top_left.p[0] + self.rect.width && menu.mouse_pos.0 > self.rect.top_left.p[0]
+        && menu.mouse_pos.1 < self.rect.top_left.p[1] + self.rect.height && menu.mouse_pos.1 > self.rect.top_left.p[1] {
+            true
+        } else {
+            false
+        }
+    }
+}
+
+impl Hovering for CheckBox {
+    fn is_hovering(
+        &self,
+        menu: &mut Menu,
+        frame: &mut Frame,
+    ) {
+        if self.in_bounds(menu) {
+            //let top_left = Vertex { position: [ top_left.position[0] - 2.0, top_left.position[1] - 2.0] };
+            println!("We are hovering rn");
+            //let outline = OutlineBox::new(frame, top_left, width + 4.0, height + 4.0);
+            //menu.add_to_draw_list(MenuObject::OutlineBox(outline));
+        }
+    }
+}
+
+impl Draw for CheckBox {
+    fn draw(
+        &self,
+        menu: &mut Menu,
+        frame: &mut Frame
+    ) {
         let uniforms = uniform! {
             screen_size: [menu.window_size.0 as f32, menu.window_size.1 as f32],
             color_input: [self.color.v[0], self.color.v[1], self.color.v[2], self.color.v[3]]

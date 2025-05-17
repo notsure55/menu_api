@@ -7,11 +7,18 @@ use winit::{ window::{ Window, WindowAttributes, WindowLevel } , event_loop::Eve
 
 use winit::dpi::{ Position::Logical, LogicalSize, LogicalPosition };
 
-use glium::Surface;
+use glium::{ Surface, Frame };
 
 use glium::backend::glutin::Display;
+
 use glutin::surface::WindowSurface;
 use glium::implement_vertex;
+
+use windows::Win32::UI::Input::KeyboardAndMouse::{ GetAsyncKeyState,
+                                                   SendInput,
+                                                   INPUT, INPUT_TYPE,
+                                                   MOUSE_EVENT_FLAGS,
+                                                   INPUT_0 };
 
 pub mod windows_api;
 pub mod rusttype;
@@ -64,6 +71,60 @@ pub fn create_overlay(hwnd: HWND, overlay_name: &str) ->
     windows_api::make_window_click_through(overlay_handle);
 
     return Ok( (event_loop, window, display, overlay_handle) )
+}
+
+pub trait Draw {
+    fn draw(
+        &self,
+        menu: &mut Menu,
+        frame: &mut Frame
+    );
+}
+pub trait InBounds {
+    fn in_bounds(
+        &self,
+        menu: &Menu
+    ) -> bool;
+}
+pub trait Hovering {
+    fn is_hovering(
+        &self,
+        menu: &mut Menu,
+        frame: &mut Frame,
+    );
+}
+
+impl Draw for MenuObject {
+    fn draw(
+        &self,
+        menu: &mut Menu,
+        frame: &mut Frame
+    ) {
+        match self {
+            MenuObject::CheckBox(check_box) => check_box.draw(menu, frame),
+        }
+    }
+}
+impl InBounds for MenuObject {
+    fn in_bounds(
+        &self,
+        menu: &Menu
+    ) -> bool {
+        match self {
+            MenuObject::CheckBox(check_box) => check_box.in_bounds(menu),
+        }
+    }
+}
+impl Hovering for MenuObject {
+    fn is_hovering(
+        &self,
+        menu: &mut Menu,
+        frame: &mut Frame,
+    ) {
+        match self {
+                MenuObject::CheckBox(check_box) => check_box.is_hovering(menu, frame),
+        }
+    }
 }
 
 #[derive(Copy, Clone)]
@@ -122,7 +183,8 @@ pub struct Menu {
     pub handle: HWND,
     pub mouse_pos: (f32, f32),
     pub base_size: (f32, f32),
-    objects: Vec<MenuObject>
+    objects: Vec<MenuObject>,
+    clickthrough: bool,
 }
 
 impl Menu {
@@ -144,7 +206,8 @@ impl Menu {
             handle,
             mouse_pos: (0.0, 0.0),
             base_size,
-            objects: Vec::new()
+            objects: Vec::new(),
+            clickthrough: true,
         }
     }
     pub fn draw_menu(&mut self) {
@@ -155,9 +218,8 @@ impl Menu {
         let objects = std::mem::take(&mut self.objects);
 
         for object in objects.iter() {
-            match object {
-                MenuObject::CheckBox(check_box) => check_box.draw(self, &mut frame),
-            }
+            object.draw(self, &mut frame);
+            object.is_hovering(self, &mut frame);
         }
         // draw_menu
 
@@ -167,5 +229,24 @@ impl Menu {
     }
     pub fn add_to_draw_list(&mut self, object: MenuObject) {
         self.objects.push(object);
+    }
+    pub fn toggle_overlay(&mut self) {
+        if self.clickthrough {
+            windows_api::make_window_non_click_through(self.handle);
+            self.clickthrough = false
+        } else {
+            windows_api::make_window_click_through(self.handle);
+            self.clickthrough = true;
+        }
+        // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-sendinput
+        let mut inputs = [INPUT { r#type: INPUT_TYPE(0), Anonymous: INPUT_0::default() }; 2];
+
+        inputs[0].r#type = INPUT_TYPE(0);
+        inputs[0].Anonymous.mi.dwFlags = MOUSE_EVENT_FLAGS(0x0002);
+
+        inputs[1].r#type = INPUT_TYPE(0);
+        inputs[1].Anonymous.mi.dwFlags = MOUSE_EVENT_FLAGS(0x0004);
+
+        unsafe { SendInput(&inputs, std::mem::size_of_val::<INPUT>(&inputs[0]) as i32) };
     }
 }

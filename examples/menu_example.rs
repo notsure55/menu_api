@@ -4,6 +4,7 @@ use std::io::Error;
 use menu_api::windows_api;
 use menu_api::rusttype;
 use menu_api::check_box;
+use windows::Win32::UI::Input::KeyboardAndMouse::{ GetAsyncKeyState };
 
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -42,6 +43,11 @@ fn main() -> Result<(), Error> {
                 },
                 glium::winit::event::WindowEvent::RedrawRequested => {
                     menu.draw_menu();
+                    unsafe {
+                        if GetAsyncKeyState(0x2D) & 0x01 > 0  {
+                            menu.toggle_overlay();
+                        }
+                    }
                     window.request_redraw()
                 },
                 _ => (),
