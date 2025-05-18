@@ -25,6 +25,7 @@ pub mod rusttype;
 pub mod check_box;
 pub mod outline_box;
 pub mod filled_box;
+pub mod float_slider;
 
 pub fn create_overlay(hwnd: HWND, overlay_name: &str) ->
     Result<(
@@ -122,6 +123,7 @@ impl Draw for MenuObject {
             MenuObject::CheckBox(b) => b.draw(menu, frame),
             MenuObject::OutlineBox(b) => b.draw(menu, frame),
             MenuObject::FilledBox(b) => b.draw(menu, frame),
+            MenuObject::FloatSlider(b) => b.draw(menu, frame),
         }
     }
 }
@@ -134,6 +136,7 @@ impl InBounds for MenuObject {
             MenuObject::CheckBox(b) => b.in_bounds(menu),
             MenuObject::OutlineBox(b) => b.in_bounds(menu),
             MenuObject::FilledBox(b) => b.in_bounds(menu),
+            MenuObject::FloatSlider(b) => b.in_bounds(menu),
         }
     }
 }
@@ -147,6 +150,7 @@ impl Hovering for MenuObject {
             MenuObject::CheckBox(b) => b.is_hovering(menu, frame),
             MenuObject::OutlineBox(b) => b.is_hovering(menu, frame),
             MenuObject::FilledBox(b) => b.is_hovering(menu, frame),
+            MenuObject::FloatSlider(b) => b.is_hovering(menu, frame),
         }
     }
 }
@@ -160,6 +164,7 @@ impl Clicked for MenuObject {
             MenuObject::CheckBox(b) => b.clicked(menu, frame),
             MenuObject::OutlineBox(b) => b.clicked(menu, frame),
             MenuObject::FilledBox(b) => b.clicked(menu, frame),
+            MenuObject::FloatSlider(b) => b.clicked(menu, frame),
         }
     }
 }
@@ -169,6 +174,7 @@ impl Options for MenuObject {
             MenuObject::CheckBox(b) => b.get_options(),
             MenuObject::OutlineBox(b) => b.get_options(),
             MenuObject::FilledBox(b) => b.get_options(),
+            MenuObject::FloatSlider(b) => b.get_options(),
         }
     }
 }
@@ -181,6 +187,7 @@ impl Draggable for MenuObject {
             MenuObject::CheckBox(b) => b.is_dragging(menu),
             MenuObject::OutlineBox(b) => b.is_dragging(menu),
             MenuObject::FilledBox(b) => b.is_dragging(menu),
+            MenuObject::FloatSlider(b) => b.is_dragging(menu),
         }
     }
 }
@@ -210,7 +217,7 @@ pub enum MenuObject {
     CheckBox(check_box::CheckBox),
     FilledBox(filled_box::FilledBox),
     OutlineBox(outline_box::OutlineBox),
-    //FloatSlider(float_slider::FloatSlider),
+    FloatSlider(float_slider::FloatSlider),
 }
 
 #[derive(Default)]
@@ -240,11 +247,42 @@ pub struct Rect {
 }
 
 impl Rect {
-    pub fn new(top_left: Vertex, width: f32, height: f32) -> Self {
+    pub fn new(
+        top_left: Vertex,
+        width: f32,
+        height: f32
+    ) -> Self {
         Self {
             top_left,
             width,
             height,
+        }
+    }
+    pub fn in_bounds(
+        &self,
+        menu: &Menu
+    ) -> bool {
+        if menu.mouse_pos.0 < self.top_left.p[0] + self.width && menu.mouse_pos.0 > self.top_left.p[0]
+        && menu.mouse_pos.1 < self.top_left.p[1] + self.height && menu.mouse_pos.1 > self.top_left.p[1] {
+            true
+        } else {
+            false
+        }
+    }
+    pub fn is_hovering(
+        &self,
+        menu: &mut Menu,
+        frame: &mut Frame,
+    ) {
+        if self.in_bounds(menu) {
+            let top_left = Vertex { p: [ self.top_left.p[0] - 2.0, self.top_left.p[1] - 2.0] };
+            let outline = outline_box::OutlineBox::new(
+                MenuOptions::new(false, false),
+                Rect::new(top_left, self.width + 4.0, self.height + 4.0),
+                Vec4::new(1.0, 0.0, 0.0, 1.0),
+                4.0
+            );
+            outline.draw(menu, frame);
         }
     }
 }
@@ -396,6 +434,10 @@ impl Menu {
                             b.rect.top_left.p[0] += self.mouse_pos.0 - self.cached_mouse_pos.0;
                             b.rect.top_left.p[1] += self.mouse_pos.1 - self.cached_mouse_pos.1;
                         },
+                        MenuObject::FloatSlider(b) => {
+                            b.rect.top_left.p[0] += self.mouse_pos.0 - self.cached_mouse_pos.0;
+                            b.rect.top_left.p[1] += self.mouse_pos.1 - self.cached_mouse_pos.1;
+                        }
                     }
                 }
                 self.cached_mouse_pos = self.mouse_pos;
