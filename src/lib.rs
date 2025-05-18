@@ -26,6 +26,7 @@ pub mod check_box;
 pub mod outline_box;
 pub mod filled_box;
 pub mod float_slider;
+pub mod label;
 
 pub fn create_overlay(hwnd: HWND, overlay_name: &str) ->
     Result<(
@@ -218,6 +219,7 @@ pub enum MenuObject {
     FilledBox(filled_box::FilledBox),
     OutlineBox(outline_box::OutlineBox),
     FloatSlider(float_slider::FloatSlider),
+//    Label(label::Label),
 }
 
 #[derive(Default)]
@@ -315,7 +317,8 @@ impl Menu {
         let base = filled_box::FilledBox::new(
             MenuOptions::new(true, true),
             Rect::new(Vertex { p: [ 100.0, 100.0] }, base_size.0, base_size.1),
-            Vec4::new(0.5, 0.5, 0.5, 1.0)
+            Vec4::new(0.5, 0.5, 0.5, 1.0),
+            None
         );
 
         Self {

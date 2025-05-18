@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::{ MenuObject, Rect, Menu, Vertex, Vec4, Draw, InBounds, Hovering, Clicked, MenuOptions, Options, outline_box, Draggable };
+use crate::{ MenuObject, Rect, Menu, Vertex, Vec4, Draw, InBounds, Hovering, Clicked, MenuOptions, Options, outline_box, Draggable, label };
 
 use glium::{ Surface, uniform, Frame };
 
@@ -10,15 +10,23 @@ pub struct CheckBox {
     pub rect: Rect,
     color: Vec4,
     toggle: Rc<RefCell<bool>>,
+    label: Option<label::Label>,
 }
 
 impl CheckBox {
-    pub fn new(options: MenuOptions, rect: Rect, color: Vec4, toggle: Rc<RefCell<bool>>) -> Self {
+    pub fn new(
+        options: MenuOptions,
+        rect: Rect,
+        color: Vec4,
+        toggle: Rc<RefCell<bool>>,
+        label: Option<label::Label>
+    ) -> Self {
         Self {
             options,
             rect,
             toggle,
             color,
+            label,
         }
     }
     pub fn do_toggle(&self) {
@@ -220,6 +228,12 @@ impl Draw for CheckBox {
             &uniforms,
             &Default::default()
         ).unwrap();
+
+        // if we have a label we draw it.
+        match &self.label {
+            Some(label) => label.draw(&self.rect, menu, frame),
+            None => (),
+        };
 
         if *self.toggle.borrow() {
             println!("Drawing check");

@@ -1,4 +1,4 @@
-use crate::{ MenuObject, Rect, Menu, Vertex, Vec4, Draw, InBounds, Hovering, Clicked, MenuOptions, Options, outline_box, Draggable };
+use crate::{ MenuObject, Rect, Menu, Vertex, Vec4, Draw, InBounds, Hovering, Clicked, MenuOptions, Options, outline_box, Draggable, label };
 
 use glium::{ Surface, uniform, Frame };
 
@@ -7,14 +7,16 @@ pub struct FilledBox {
     options: MenuOptions,
     pub rect: Rect,
     color: Vec4,
+    label: Option<label::Label>,
 }
 
 impl FilledBox {
-    pub fn new(options: MenuOptions, rect: Rect, color: Vec4) -> Self {
+    pub fn new(options: MenuOptions, rect: Rect, color: Vec4, label: Option<label::Label>) -> Self {
         Self {
             options,
             rect,
             color,
+            label,
         }
     }
 }
@@ -151,5 +153,10 @@ impl Draw for FilledBox {
             &uniforms,
             &Default::default()
         ).unwrap();
+
+        match &self.label {
+            Some(label) => label.draw(&self.rect, menu, frame),
+            None => (),
+        };
     }
 }

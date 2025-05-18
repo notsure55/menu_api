@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::{ MenuObject, Rect, Menu, Vertex, Vec4, Draw, InBounds, Hovering, Clicked, MenuOptions, Options, outline_box, Draggable };
+use crate::{ MenuObject, Rect, Menu, Vertex, Vec4, Draw, InBounds, Hovering, Clicked, MenuOptions, Options, outline_box, Draggable, label };
 
 use glium::{ Surface, uniform, Frame };
 
@@ -14,10 +14,19 @@ pub struct FloatSlider {
     min: f32,
     max: f32,
     holding: Rc<RefCell<bool>>,
+    label: Option<label::Label>
 }
 
 impl FloatSlider {
-    pub fn new(options: MenuOptions, rect: Rect, color: Vec4, slider: Rc<RefCell<f32>>, min:f32, max: f32) -> Self {
+    pub fn new(
+        options: MenuOptions,
+        rect: Rect,
+        color: Vec4,
+        slider: Rc<RefCell<f32>>,
+        min:f32,
+        max: f32,
+        label: Option<label::Label>
+    ) -> Self {
         Self {
             options,
             rect,
@@ -26,6 +35,7 @@ impl FloatSlider {
             min,
             max,
             holding: Rc::new(RefCell::new(false)),
+            label,
         }
     }
     fn draw_slider(&self, menu: &mut Menu, frame: &mut Frame) {
@@ -243,6 +253,11 @@ impl Draw for FloatSlider {
             &uniforms,
             &Default::default()
         ).unwrap();
+
+        match &self.label {
+            Some(label) => label.draw(&self.rect, menu, frame),
+            None => (),
+        };
 
         self.draw_slider(menu, frame);
     }
