@@ -24,6 +24,7 @@ pub mod windows_api;
 pub mod rusttype;
 pub mod check_box;
 pub mod outline_box;
+pub mod filled_box;
 
 pub fn create_overlay(hwnd: HWND, overlay_name: &str) ->
     Result<(
@@ -102,8 +103,15 @@ pub trait Clicked {
     ) -> bool;
 }
 pub trait Options {
-    fn get_options(&self) -> &MenuOptions;
+    fn get_options(&self) -> MenuOptions;
 }
+pub trait Draggable {
+    fn is_dragging(
+        &mut self,
+        menu: &mut Menu,
+    );
+}
+
 impl Draw for MenuObject {
     fn draw(
         &self,
@@ -113,6 +121,7 @@ impl Draw for MenuObject {
         match self {
             MenuObject::CheckBox(b) => b.draw(menu, frame),
             MenuObject::OutlineBox(b) => b.draw(menu, frame),
+            MenuObject::FilledBox(b) => b.draw(menu, frame),
         }
     }
 }
@@ -124,6 +133,7 @@ impl InBounds for MenuObject {
         match self {
             MenuObject::CheckBox(b) => b.in_bounds(menu),
             MenuObject::OutlineBox(b) => b.in_bounds(menu),
+            MenuObject::FilledBox(b) => b.in_bounds(menu),
         }
     }
 }
@@ -136,6 +146,7 @@ impl Hovering for MenuObject {
         match self {
             MenuObject::CheckBox(b) => b.is_hovering(menu, frame),
             MenuObject::OutlineBox(b) => b.is_hovering(menu, frame),
+            MenuObject::FilledBox(b) => b.is_hovering(menu, frame),
         }
     }
 }
@@ -148,26 +159,39 @@ impl Clicked for MenuObject {
         match self {
             MenuObject::CheckBox(b) => b.clicked(menu, frame),
             MenuObject::OutlineBox(b) => b.clicked(menu, frame),
+            MenuObject::FilledBox(b) => b.clicked(menu, frame),
         }
     }
 }
 impl Options for MenuObject {
-    fn get_options(&self) -> &MenuOptions {
+    fn get_options(&self) -> MenuOptions {
         match self {
             MenuObject::CheckBox(b) => b.get_options(),
             MenuObject::OutlineBox(b) => b.get_options(),
+            MenuObject::FilledBox(b) => b.get_options(),
         }
     }
 }
-
-#[derive(Copy, Clone)]
+impl Draggable for MenuObject {
+    fn is_dragging(
+        &mut self,
+        menu: &mut Menu,
+    ) {
+        match self {
+            MenuObject::CheckBox(b) => b.is_dragging(menu),
+            MenuObject::OutlineBox(b) => b.is_dragging(menu),
+            MenuObject::FilledBox(b) => b.is_dragging(menu),
+        }
+    }
+}
+#[derive(Copy, Clone, Default)]
 pub struct Vertex {
     pub p: [f32; 2],
 }
 
 implement_vertex!(Vertex, p);
 
-#[derive(Default)]
+#[derive(Default, Copy, Clone)]
 pub struct MenuOptions {
     draggable: bool,
     hover: bool,
@@ -184,11 +208,12 @@ impl MenuOptions {
 
 pub enum MenuObject {
     CheckBox(check_box::CheckBox),
-    //FilledBox(filled_box::FilledBox),
+    FilledBox(filled_box::FilledBox),
     OutlineBox(outline_box::OutlineBox),
     //FloatSlider(float_slider::FloatSlider),
 }
 
+#[derive(Default)]
 pub struct Vec4 {
     v: [f32; 4]
 }
@@ -207,10 +232,11 @@ impl Vec4 {
     }
 }
 
+#[derive(Default)]
 pub struct Rect {
-    top_left: Vertex,
-    width: f32,
-    height: f32,
+    pub top_left: Vertex,
+    pub width: f32,
+    pub height: f32,
 }
 
 impl Rect {
@@ -231,7 +257,7 @@ pub struct Menu {
     pub handle: HWND,
     pub mouse_pos: (f32, f32),
     pub cached_mouse_pos: (f32, f32),
-    pub base_size: (f32, f32),
+    pub base: filled_box::FilledBox,
     objects: Vec<MenuObject>,
     clickthrough: bool,
     pub clicked: bool,
@@ -248,6 +274,11 @@ impl Menu {
     ) -> Self {
 
         let window_size = display.get_framebuffer_dimensions();
+        let base = filled_box::FilledBox::new(
+            MenuOptions::new(true, true),
+            Rect::new(Vertex { p: [ 100.0, 100.0] }, base_size.0, base_size.1),
+            Vec4::new(0.5, 0.5, 0.5, 1.0)
+        );
 
         Self {
             display,
@@ -257,7 +288,7 @@ impl Menu {
             handle,
             mouse_pos: (0.0, 0.0),
             cached_mouse_pos: (0.0, 0.0),
-            base_size,
+            base,
             objects: Vec::new(),
             clickthrough: true,
             clicked: false,
@@ -271,9 +302,17 @@ impl Menu {
 
         frame.clear_color(0.0, 0.0, 0.0, 0.0);
 
+        let mut base = std::mem::take(&mut self.base);
+
+        base.draw(self, &mut frame);
+        self.base_dragging(&mut base);
+        base.is_hovering(self, &mut frame);
+
+        self.base = base;
+
         let mut objects = std::mem::take(&mut self.objects);
 
-        for object in objects.iter() {
+        for object in objects.iter_mut() {
             object.draw(self, &mut frame);
 
             object.clicked(self, &mut frame);
@@ -281,12 +320,12 @@ impl Menu {
             let options = object.get_options();
 
             if options.draggable {
+                object.is_dragging(self);
             }
             if options.hover {
                 object.is_hovering(self, &mut frame);
             }
         }
-        // draw_menu
 
         self.objects = objects;
 
@@ -330,6 +369,36 @@ impl Menu {
                 }
             } else {
                 self.dragging = false;
+            }
+        }
+    }
+    fn base_dragging(&mut self, base: &mut filled_box::FilledBox) {
+        for object in self.objects.iter() {
+            if object.in_bounds(&self) && self.dragging {
+                return
+            }
+        }
+        if self.mouse_pos.0 != self.cached_mouse_pos.0 || self.mouse_pos.1 != self.cached_mouse_pos.1 {
+            if base.in_bounds(&self) && self.dragging {
+                base.rect.top_left.p[0] += self.mouse_pos.0 - self.cached_mouse_pos.0;
+                base.rect.top_left.p[1] += self.mouse_pos.1 - self.cached_mouse_pos.1;
+                for object in self.objects.iter_mut() {
+                    match object {
+                        MenuObject::CheckBox(b) => {
+                            b.rect.top_left.p[0] += self.mouse_pos.0 - self.cached_mouse_pos.0;
+                            b.rect.top_left.p[1] += self.mouse_pos.1 - self.cached_mouse_pos.1;
+                        },
+                        MenuObject::OutlineBox(b) => {
+                            b.rect.top_left.p[0] += self.mouse_pos.0 - self.cached_mouse_pos.0;
+                            b.rect.top_left.p[1] += self.mouse_pos.1 - self.cached_mouse_pos.1;
+                        },
+                        MenuObject::FilledBox(b) => {
+                            b.rect.top_left.p[0] += self.mouse_pos.0 - self.cached_mouse_pos.0;
+                            b.rect.top_left.p[1] += self.mouse_pos.1 - self.cached_mouse_pos.1;
+                        },
+                    }
+                }
+                self.cached_mouse_pos = self.mouse_pos;
             }
         }
     }

@@ -2,9 +2,7 @@ extern crate menu_api;
 use menu_api::Menu;
 
 use std::io::Error;
-use menu_api::windows_api;
-use menu_api::rusttype;
-use menu_api::check_box;
+use menu_api::{ windows_api, filled_box, rusttype, check_box };
 use windows::Win32::UI::Input::KeyboardAndMouse::{ GetAsyncKeyState };
 
 use std::cell::RefCell;
@@ -58,12 +56,26 @@ fn main() -> Result<(), Error> {
 fn build_menu(menu: &mut Menu, black: Rc<RefCell<bool>>) {
     let check_box = check_box::CheckBox::new(
         menu_api::MenuOptions::new(true, true),
-        menu_api::Rect::new(menu_api::Vertex { p: [ 100.0, 100.0] }, 200.0, 200.0 ),
-        menu_api::Vec4::new(0.5, 0.5, 0.5, 1.0),
+        menu_api::Rect::new(menu_api::Vertex { p: [ menu.base.rect.top_left.p[0] + 15.0,
+                                                    menu.base.rect.top_left.p[1] + 15.0] }, 30.0, 30.0 ),
+        menu_api::Vec4::new(0.0, 1.0, 0.7, 1.0),
         Rc::clone(&black),
     );
-
+    let filled_box = filled_box::FilledBox::new(
+        menu_api::MenuOptions::new(true, true),
+        menu_api::Rect::new(menu_api::Vertex { p: [ menu.base.rect.top_left.p[0] + 100.0,
+                                                    menu.base.rect.top_left.p[1] + 100.0] }, 100.0, 100.0 ),
+        menu_api::Vec4::new(1.0, 1.0, 0.7, 1.0),
+    );
+    let filled_box1 = filled_box::FilledBox::new(
+        menu_api::MenuOptions::new(true, true),
+        menu_api::Rect::new(menu_api::Vertex { p: [ menu.base.rect.top_left.p[0] + 300.0,
+                                                    menu.base.rect.top_left.p[1] + 300.0] }, 100.0, 100.0 ),
+        menu_api::Vec4::new(1.0, 0.0, 1.0, 1.0),
+    );
     menu.add_to_draw_list(menu_api::MenuObject::CheckBox(check_box));
+    menu.add_to_draw_list(menu_api::MenuObject::FilledBox(filled_box));
+    menu.add_to_draw_list(menu_api::MenuObject::FilledBox(filled_box1));
 }
 
 fn cheat_loop(menu: &mut Menu) {

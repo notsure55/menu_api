@@ -1,25 +1,25 @@
-use crate::{ Rect, Menu, Vertex, Vec4, Draw, InBounds, Hovering, Clicked, MenuOptions, Options, Draggable };
+use crate::{ MenuObject, Rect, Menu, Vertex, Vec4, Draw, InBounds, Hovering, Clicked, MenuOptions, Options, outline_box, Draggable };
+
 use glium::{ Surface, uniform, Frame };
 
-pub struct OutlineBox {
+#[derive(Default)]
+pub struct FilledBox {
     options: MenuOptions,
     pub rect: Rect,
     color: Vec4,
-    thickness: f32,
 }
 
-impl OutlineBox {
-    pub fn new(options: MenuOptions, rect: Rect, color: Vec4, thickness: f32) -> Self {
+impl FilledBox {
+    pub fn new(options: MenuOptions, rect: Rect, color: Vec4) -> Self {
         Self {
             options,
             rect,
             color,
-            thickness,
         }
     }
 }
 
-impl InBounds for OutlineBox {
+impl InBounds for FilledBox {
     fn in_bounds(
         &self,
         menu: &Menu
@@ -33,21 +33,49 @@ impl InBounds for OutlineBox {
     }
 }
 
-impl Hovering for OutlineBox {
+impl Hovering for FilledBox {
     fn is_hovering(
         &self,
         menu: &mut Menu,
         frame: &mut Frame,
     ) {
         if self.in_bounds(menu) {
-            //let top_left = Vertex { position: [ top_left.position[0] - 2.0, top_left.position[1] - 2.0] };
-            //let outline = OutlineBox::new(frame, top_left, width + 4.0, height + 4.0);
-            //menu.add_to_draw_list(MenuObject::OutlineBox(outline));
+            let top_left = Vertex { p: [ self.rect.top_left.p[0] - 2.0, self.rect.top_left.p[1] - 2.0] };
+            let outline = outline_box::OutlineBox::new(
+                MenuOptions::new(false, false),
+                Rect::new(top_left, self.rect.width + 4.0, self.rect.height + 4.0),
+                Vec4::new(1.0, 0.0, 0.0, 1.0),
+                4.0
+            );
+            outline.draw(menu, frame);
         }
     }
 }
 
-impl Clicked for OutlineBox {
+impl Draggable for FilledBox {
+    fn is_dragging(
+        &mut self,
+        menu: &mut Menu,
+    ) {
+        if menu.mouse_pos.0 != menu.cached_mouse_pos.0 || menu.mouse_pos.1 != menu.cached_mouse_pos.1 {
+            // make so we cant move it out of base_me
+            let new_x = self.rect.top_left.p[0] + menu.mouse_pos.0 - menu.cached_mouse_pos.0;
+            let new_y = self.rect.top_left.p[1] + menu.mouse_pos.1 - menu.cached_mouse_pos.1;
+            if self.in_bounds(&menu) && menu.dragging
+                && new_x < menu.base.rect.top_left.p[0] + menu.base.rect.width - self.rect.width
+                && new_x > menu.base.rect.top_left.p[0]
+                && new_y < menu.base.rect.top_left.p[1] + menu.base.rect.height - self.rect.height
+                && new_y > menu.base.rect.top_left.p[1]
+            {
+                self.rect.top_left.p[0] = new_x;
+                self.rect.top_left.p[1] = new_y;
+                menu.cached_mouse_pos = menu.mouse_pos;
+            }
+        }
+    }
+}
+
+impl Clicked for FilledBox {
     fn clicked(
         &self,
         menu: &mut Menu,
@@ -61,28 +89,13 @@ impl Clicked for OutlineBox {
     }
 }
 
-impl Options for OutlineBox {
+impl Options for FilledBox {
     fn get_options(&self) -> MenuOptions {
         self.options
     }
 }
 
-impl Draggable for OutlineBox {
-    fn is_dragging(
-        &mut self,
-        menu: &mut Menu,
-    ) {
-        if menu.mouse_pos.0 != menu.cached_mouse_pos.0 || menu.mouse_pos.1 != menu.cached_mouse_pos.1 {
-            if self.in_bounds(&menu) && menu.dragging {
-                self.rect.top_left.p[0] += menu.mouse_pos.0 - menu.cached_mouse_pos.0;
-                self.rect.top_left.p[1] += menu.mouse_pos.1 - menu.cached_mouse_pos.1;
-                menu.cached_mouse_pos = menu.mouse_pos;
-            }
-        }
-    }
-}
-
-impl Draw for OutlineBox {
+impl Draw for FilledBox {
     fn draw(
         &self,
         menu: &mut Menu,
@@ -101,7 +114,7 @@ impl Draw for OutlineBox {
         ];
 
         let vertex_buffer = glium::VertexBuffer::new(&menu.display, &shape).unwrap();
-        let indices = glium::index::NoIndices(glium::index::PrimitiveType::LineLoop);
+        let indices = glium::index::NoIndices(glium::index::PrimitiveType::TriangleFan);
 
         let vertex_shader_src = r#"
         #version 140
@@ -129,11 +142,6 @@ impl Draw for OutlineBox {
         }
         "#;
 
-        let params = glium::DrawParameters {
-            line_width: Some(self.thickness),
-            .. Default::default()
-        };
-
         let program = glium::Program::from_source(&menu.display, vertex_shader_src, fragment_shader_src, None).unwrap();
 
         frame.draw(
@@ -141,7 +149,7 @@ impl Draw for OutlineBox {
             &indices,
             &program,
             &uniforms,
-            &params
+            &Default::default()
         ).unwrap();
     }
 }
