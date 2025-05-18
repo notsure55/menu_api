@@ -43,7 +43,7 @@ impl Hovering for FilledBox {
     ) {
         if self.in_bounds(menu) {
             let top_left = Vertex { p: [ self.rect.top_left.p[0] - 2.0, self.rect.top_left.p[1] - 2.0] };
-            let outline = outline_box::OutlineBox::new(
+            let mut outline = outline_box::OutlineBox::new(
                 MenuOptions::new(false, false),
                 Rect::new(top_left, self.rect.width + 4.0, self.rect.height + 4.0),
                 Vec4::new(1.0, 0.0, 0.0, 1.0),
@@ -99,7 +99,7 @@ impl Options for FilledBox {
 
 impl Draw for FilledBox {
     fn draw(
-        &self,
+        &mut self,
         menu: &mut Menu,
         frame: &mut Frame
     ) {

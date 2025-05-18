@@ -9,8 +9,9 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 fn main() -> Result<(), Error> {
-    let hwnd = windows_api::grab_game_hwnd("Counter-Strike 2");
-    let (event_loop, window, display, overlay_hwnd) = menu_api::create_overlay(hwnd, "Black Overlay").unwrap();
+    // optional
+    // let hwnd = windows_api::grab_game_hwnd("Counter-Strike 2");         // Some(hwnd)
+    let (event_loop, window, display, overlay_hwnd) = menu_api::create_overlay(None, "Black Overlay").unwrap();
 
     let system = rusttype::TextSystem::new(&display);
 

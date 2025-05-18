@@ -1,6 +1,6 @@
 [package]
 name = "menu_glium_api"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2024"
 authors = ["notsure55 contact_email: blackender5123@mailfence.com"]
 description = "menu api for glium, specifically for building overlays in windows"

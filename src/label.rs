@@ -15,7 +15,8 @@ pub enum Direction {
 pub struct Label {
     color: Vec4,
     direction: Direction,
-    text: String,
+    pub original_text: String,
+    pub text: String,
     scale: f32
 }
 
@@ -24,6 +25,7 @@ impl Label {
         Self {
             color,
             direction,
+            original_text: String::from(text),
             text: String::from(text),
             scale,
         }

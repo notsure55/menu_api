@@ -84,7 +84,7 @@ impl Draggable for OutlineBox {
 
 impl Draw for OutlineBox {
     fn draw(
-        &self,
+        &mut self,
         menu: &mut Menu,
         frame: &mut Frame
     ) {

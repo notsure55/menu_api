@@ -1,4 +1,4 @@
-use windows::Win32::Foundation:: { HWND };
+use windows::Win32::Foundation:: { HWND, RECT };
 use std::io::{Error, ErrorKind};
 use std::ffi::c_void;
 use winit::raw_window_handle::HasWindowHandle;
@@ -28,7 +28,7 @@ pub mod filled_box;
 pub mod float_slider;
 pub mod label;
 
-pub fn create_overlay(hwnd: HWND, overlay_name: &str) ->
+pub fn create_overlay(hwnd: Option<HWND>, overlay_name: &str) ->
     Result<(
         EventLoop<()>,
         Window,
@@ -36,10 +36,15 @@ pub fn create_overlay(hwnd: HWND, overlay_name: &str) ->
         HWND
     ), Error>
 {
+    let mut window_size = RECT { left: 100, top: 100, right: 800, bottom: 800 };
+    let mut width = window_size.right - window_size.left - 15;
+    let mut height = window_size.bottom - window_size.top - 40;
+    if hwnd.is_some() {
+        window_size = windows_api::grab_window_dimensions(hwnd.unwrap());
+        width = window_size.right - window_size.left - 15;
+        height = window_size.bottom - window_size.top - 40;
+    }
     // calculating window dimensions
-    let window_size = windows_api::grab_window_dimensions(hwnd);
-    let width = window_size.right - window_size.left - 15;
-    let height = window_size.bottom - window_size.top - 40;
 
     #[allow(deprecated)]
     let window_attributes = WindowAttributes::new()
@@ -79,7 +84,7 @@ pub fn create_overlay(hwnd: HWND, overlay_name: &str) ->
 
 pub trait Draw {
     fn draw(
-        &self,
+        &mut self,
         menu: &mut Menu,
         frame: &mut Frame
     );
@@ -116,7 +121,7 @@ pub trait Draggable {
 
 impl Draw for MenuObject {
     fn draw(
-        &self,
+        &mut self,
         menu: &mut Menu,
         frame: &mut Frame
     ) {
@@ -278,7 +283,7 @@ impl Rect {
     ) {
         if self.in_bounds(menu) {
             let top_left = Vertex { p: [ self.top_left.p[0] - 2.0, self.top_left.p[1] - 2.0] };
-            let outline = outline_box::OutlineBox::new(
+            let mut outline = outline_box::OutlineBox::new(
                 MenuOptions::new(false, false),
                 Rect::new(top_left, self.width + 4.0, self.height + 4.0),
                 Vec4::new(1.0, 0.0, 0.0, 1.0),
