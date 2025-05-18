@@ -1,19 +1,21 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::{ Rect, Menu, Vertex, Vec4, Draw, InBounds, Hovering };
+use crate::{ MenuObject, Rect, Menu, Vertex, Vec4, Draw, InBounds, Hovering, Clicked, MenuOptions, Options, outline_box };
 
 use glium::{ Surface, uniform, Frame };
 
 pub struct CheckBox {
+    options: MenuOptions,
     rect: Rect,
     color: Vec4,
     toggle: Rc<RefCell<bool>>,
 }
 
 impl CheckBox {
-    pub fn new(rect: Rect, color: Vec4, toggle: Rc<RefCell<bool>>) -> Self {
+    pub fn new(options: MenuOptions, rect: Rect, color: Vec4, toggle: Rc<RefCell<bool>>) -> Self {
         Self {
+            options,
             rect,
             toggle,
             color,
@@ -46,11 +48,36 @@ impl Hovering for CheckBox {
         frame: &mut Frame,
     ) {
         if self.in_bounds(menu) {
-            //let top_left = Vertex { position: [ top_left.position[0] - 2.0, top_left.position[1] - 2.0] };
-            println!("We are hovering rn");
-            //let outline = OutlineBox::new(frame, top_left, width + 4.0, height + 4.0);
-            //menu.add_to_draw_list(MenuObject::OutlineBox(outline));
+            let top_left = Vertex { p: [ self.rect.top_left.p[0] - 2.0, self.rect.top_left.p[1] - 2.0] };
+            let outline = outline_box::OutlineBox::new(
+                MenuOptions::new(false, false),
+                Rect::new(top_left, self.rect.width + 4.0, self.rect.height + 4.0),
+                Vec4::new(1.0, 0.0, 0.0, 1.0),
+                4.0
+            );
+            outline.draw(menu, frame);
         }
+    }
+}
+
+impl Clicked for CheckBox {
+    fn clicked(
+        &self,
+        menu: &mut Menu,
+        frame: &mut Frame,
+    ) -> bool {
+        if self.in_bounds(&menu) && menu.clicked {
+            self.toggle();
+            return true
+        } else {
+            return false
+        }
+    }
+}
+
+impl Options for CheckBox {
+    fn get_options(&self) -> &MenuOptions {
+        &self.options
     }
 }
 

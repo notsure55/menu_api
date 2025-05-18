@@ -1,4 +1,5 @@
 extern crate menu_api;
+use menu_api::Menu;
 
 use std::io::Error;
 use menu_api::windows_api;
@@ -10,6 +11,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 fn main() -> Result<(), Error> {
+
     let hwnd = windows_api::grab_game_hwnd("Counter-Strike 2");
     let (event_loop, window, display, overlay_hwnd) = menu_api::create_overlay(hwnd, "Black Overlay").unwrap();
 
@@ -21,16 +23,11 @@ fn main() -> Result<(), Error> {
         rusttype::FontTexture::ascii_character_list()
     ).unwrap();
 
-    let mut black = false;
+    let black = Rc::new(RefCell::new(false));
 
     let mut menu = menu_api::Menu::new(display, system, font, overlay_hwnd, (600.0, 450.0));
-    let check_box = check_box::CheckBox::new(
-        menu_api::Rect::new(menu_api::Vertex { p: [ 100.0, 100.0] }, 200.0, 200.0 ),
-        menu_api::Vec4::new(1.0, 0.0, 0.0, 1.0),
-        Rc::new(RefCell::new(black))
-    );
 
-    menu.add_to_draw_list(menu_api::MenuObject::CheckBox(check_box));
+    build_menu(&mut menu, Rc::clone(&black));
 
     #[allow(deprecated)]
     event_loop.run(move |event, window_target| {
@@ -42,12 +39,10 @@ fn main() -> Result<(), Error> {
                     menu.mouse_pos = (position.x as f32, position.y as f32);
                 },
                 glium::winit::event::WindowEvent::RedrawRequested => {
-                    menu.draw_menu();
-                    unsafe {
-                        if GetAsyncKeyState(0x2D) & 0x01 > 0  {
-                            menu.toggle_overlay();
-                        }
+                    if *black.borrow() {
+                        println!("We are black!");
                     }
+                    cheat_loop(&mut menu);
                     window.request_redraw()
                 },
                 _ => (),
@@ -58,4 +53,25 @@ fn main() -> Result<(), Error> {
     .unwrap();
 
     Ok(())
+}
+
+fn build_menu(menu: &mut Menu, black: Rc<RefCell<bool>>) {
+    let check_box = check_box::CheckBox::new(
+        menu_api::MenuOptions::new(true, true),
+        menu_api::Rect::new(menu_api::Vertex { p: [ 100.0, 100.0] }, 200.0, 200.0 ),
+        menu_api::Vec4::new(0.5, 0.5, 0.5, 1.0),
+        Rc::clone(&black),
+    );
+
+    menu.add_to_draw_list(menu_api::MenuObject::CheckBox(check_box));
+}
+
+fn cheat_loop(menu: &mut Menu) {
+    menu.draw_menu();
+    unsafe {
+        // insert key
+        if GetAsyncKeyState(0x2D) & 0x01 > 0  {
+            menu.toggle_overlay();
+        }
+    }
 }

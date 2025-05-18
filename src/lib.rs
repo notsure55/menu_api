@@ -23,6 +23,7 @@ use windows::Win32::UI::Input::KeyboardAndMouse::{ GetAsyncKeyState,
 pub mod windows_api;
 pub mod rusttype;
 pub mod check_box;
+pub mod outline_box;
 
 pub fn create_overlay(hwnd: HWND, overlay_name: &str) ->
     Result<(
@@ -93,7 +94,16 @@ pub trait Hovering {
         frame: &mut Frame,
     );
 }
-
+pub trait Clicked {
+    fn clicked(
+        &self,
+        menu: &mut Menu,
+        frame: &mut Frame,
+    ) -> bool;
+}
+pub trait Options {
+    fn get_options(&self) -> &MenuOptions;
+}
 impl Draw for MenuObject {
     fn draw(
         &self,
@@ -101,7 +111,8 @@ impl Draw for MenuObject {
         frame: &mut Frame
     ) {
         match self {
-            MenuObject::CheckBox(check_box) => check_box.draw(menu, frame),
+            MenuObject::CheckBox(b) => b.draw(menu, frame),
+            MenuObject::OutlineBox(b) => b.draw(menu, frame),
         }
     }
 }
@@ -111,7 +122,8 @@ impl InBounds for MenuObject {
         menu: &Menu
     ) -> bool {
         match self {
-            MenuObject::CheckBox(check_box) => check_box.in_bounds(menu),
+            MenuObject::CheckBox(b) => b.in_bounds(menu),
+            MenuObject::OutlineBox(b) => b.in_bounds(menu),
         }
     }
 }
@@ -122,7 +134,28 @@ impl Hovering for MenuObject {
         frame: &mut Frame,
     ) {
         match self {
-                MenuObject::CheckBox(check_box) => check_box.is_hovering(menu, frame),
+            MenuObject::CheckBox(b) => b.is_hovering(menu, frame),
+            MenuObject::OutlineBox(b) => b.is_hovering(menu, frame),
+        }
+    }
+}
+impl Clicked for MenuObject {
+    fn clicked(
+        &self,
+        menu: &mut Menu,
+        frame: &mut Frame,
+    ) -> bool {
+        match self {
+            MenuObject::CheckBox(b) => b.clicked(menu, frame),
+            MenuObject::OutlineBox(b) => b.clicked(menu, frame),
+        }
+    }
+}
+impl Options for MenuObject {
+    fn get_options(&self) -> &MenuOptions {
+        match self {
+            MenuObject::CheckBox(b) => b.get_options(),
+            MenuObject::OutlineBox(b) => b.get_options(),
         }
     }
 }
@@ -134,11 +167,26 @@ pub struct Vertex {
 
 implement_vertex!(Vertex, p);
 
+#[derive(Default)]
+pub struct MenuOptions {
+    draggable: bool,
+    hover: bool,
+}
+
+impl MenuOptions {
+    pub fn new(draggable: bool, hover: bool) -> Self {
+        Self {
+            draggable,
+            hover,
+        }
+    }
+}
+
 pub enum MenuObject {
     CheckBox(check_box::CheckBox),
-  /*FilledBox(filled_box::FilledBox),
+    //FilledBox(filled_box::FilledBox),
     OutlineBox(outline_box::OutlineBox),
-    FloatSlider(float_slider::FloatSlider),*/
+    //FloatSlider(float_slider::FloatSlider),
 }
 
 pub struct Vec4 {
@@ -182,9 +230,12 @@ pub struct Menu {
     pub font: rusttype::FontTexture,
     pub handle: HWND,
     pub mouse_pos: (f32, f32),
+    pub cached_mouse_pos: (f32, f32),
     pub base_size: (f32, f32),
     objects: Vec<MenuObject>,
     clickthrough: bool,
+    pub clicked: bool,
+    pub dragging: bool,
 }
 
 impl Menu {
@@ -205,21 +256,35 @@ impl Menu {
             font,
             handle,
             mouse_pos: (0.0, 0.0),
+            cached_mouse_pos: (0.0, 0.0),
             base_size,
             objects: Vec::new(),
             clickthrough: true,
+            clicked: false,
+            dragging: false,
         }
     }
     pub fn draw_menu(&mut self) {
+        self.check_clicks();
+
         let mut frame = self.display.draw();
 
         frame.clear_color(0.0, 0.0, 0.0, 0.0);
 
-        let objects = std::mem::take(&mut self.objects);
+        let mut objects = std::mem::take(&mut self.objects);
 
         for object in objects.iter() {
             object.draw(self, &mut frame);
-            object.is_hovering(self, &mut frame);
+
+            object.clicked(self, &mut frame);
+
+            let options = object.get_options();
+
+            if options.draggable {
+            }
+            if options.hover {
+                object.is_hovering(self, &mut frame);
+            }
         }
         // draw_menu
 
@@ -248,5 +313,24 @@ impl Menu {
         inputs[1].Anonymous.mi.dwFlags = MOUSE_EVENT_FLAGS(0x0004);
 
         unsafe { SendInput(&inputs, std::mem::size_of_val::<INPUT>(&inputs[0]) as i32) };
+    }
+    pub fn check_clicks(&mut self) {
+        // reset for next loop if not clicked again
+        unsafe {
+            if self.clicked {
+                self.clicked = false;
+            }
+            if GetAsyncKeyState(0x01) & 0x01 > 0 {
+                self.clicked = true;
+            }
+            if GetAsyncKeyState(0x02) < 0 {
+                if !self.dragging {
+                    self.dragging = true;
+                    self.cached_mouse_pos = self.mouse_pos;
+                }
+            } else {
+                self.dragging = false;
+            }
+        }
     }
 }
