@@ -353,33 +353,37 @@ impl Menu {
 
         frame.clear_color(0.0, 0.0, 0.0, 0.0);
 
-        let mut base = std::mem::take(&mut self.base);
+        if !self.clickthrough {
+            let mut base = std::mem::take(&mut self.base);
 
-        base.draw(self, &mut frame);
-        self.base_dragging(&mut base);
-        base.is_hovering(self, &mut frame);
+            base.draw(self, &mut frame);
+            self.base_dragging(&mut base);
+            base.is_hovering(self, &mut frame);
 
-        self.base = base;
+            self.base = base;
+        }
 
         let mut objects = std::mem::take(&mut self.objects);
 
         let mut remove = vec![];
 
         for (i, object) in objects.iter_mut().enumerate() {
-            object.draw(self, &mut frame);
-
-            object.clicked(self, &mut frame);
-
             let options = object.get_options();
 
-            if options.draggable {
-                object.is_dragging(self);
-            }
-            if options.hover {
-                object.is_hovering(self, &mut frame);
-            }
-            if options.delete {
-                remove.push(i)
+            if options.delete || !self.clickthrough {
+                object.draw(self, &mut frame);
+
+                object.clicked(self, &mut frame);
+
+                if options.draggable {
+                    object.is_dragging(self);
+                }
+                if options.hover {
+                    object.is_hovering(self, &mut frame);
+                }
+                if options.delete {
+                    remove.push(i)
+                }
             }
         }
 
