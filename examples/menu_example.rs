@@ -60,19 +60,22 @@ fn build_menu(menu: &mut Menu, black: Rc<RefCell<bool>>, float: Rc<RefCell<f32>>
         menu_api::Vec4::new(1.0, 0.0, 0.0, 1.0),
         label::Direction::Top,
         "Esp",
-        20.0
+        20.0,
+        0.10,
     );
     let smoothing = label::Label::new(
         menu_api::Vec4::new(1.0, 1.0, 0.0, 1.0),
         label::Direction::Bottom,
         "smoothing",
-        20.0
+        20.0,
+        0.5,
     );
     let fanboy = label::Label::new(
         menu_api::Vec4::new(1.0, 1.0, 0.0, 1.0),
         label::Direction::Top,
         "Fanboy",
-        20.0
+        20.0,
+        0.5,
     );
     let check_box = check_box::CheckBox::new(
         menu_api::MenuOptions::new(true, true, false, true),

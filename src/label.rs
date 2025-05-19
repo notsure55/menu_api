@@ -17,17 +17,19 @@ pub struct Label {
     direction: Direction,
     pub original_text: String,
     pub text: String,
-    scale: f32
+    scale: f32,
+    dist_scale: f32,
 }
 
 impl Label {
-    pub fn new(color: Vec4, direction: Direction, text: &str, scale: f32) -> Self {
+    pub fn new(color: Vec4, direction: Direction, text: &str, scale: f32, dist_scale: f32) -> Self {
         Self {
             color,
             direction,
             original_text: String::from(text),
             text: String::from(text),
             scale,
+            dist_scale
         }
     }
     pub fn draw(
@@ -39,16 +41,16 @@ impl Label {
         let mut top_left = Vertex { p: [ rect.top_left.p[0], rect.top_left.p[1] ] };
         match self.direction {
             Direction::Top => {
-                top_left = Vertex { p: [ rect.top_left.p[0], rect.top_left.p[1] - rect.height * 0.10] };
+                top_left = Vertex { p: [ rect.top_left.p[0], rect.top_left.p[1] - rect.height * self.dist_scale] };
             },
             Direction::Left => {
-                top_left = Vertex { p: [ rect.top_left.p[0] - rect.width, rect.top_left.p[1] + rect.height * 0.50 ] };
+                top_left = Vertex { p: [ rect.top_left.p[0] - rect.width, rect.top_left.p[1] + rect.height * self.dist_scale ] };
             },
             Direction::Right => {
-                top_left = Vertex { p: [ rect.top_left.p[0] + rect.width, rect.top_left.p[1] + rect.height * 0.50 ] };
+                top_left = Vertex { p: [ rect.top_left.p[0] + rect.width, rect.top_left.p[1] + rect.height * self.dist_scale ] };
             },
             Direction::Bottom => {
-                top_left = Vertex { p: [ rect.top_left.p[0], rect.top_left.p[1] + rect.height * 2.0 ] };
+                top_left = Vertex { p: [ rect.top_left.p[0], rect.top_left.p[1] + rect.height * (self.dist_scale + 1.0) ] };
             },
         }
         let text = rusttype::TextDisplay::new(&menu.system, &menu.font, &self.text);
