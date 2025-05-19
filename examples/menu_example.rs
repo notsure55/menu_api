@@ -10,8 +10,8 @@ use std::rc::Rc;
 
 fn main() -> Result<(), Error> {
     // optional
-    // let hwnd = windows_api::grab_game_hwnd("Counter-Strike 2");         // Some(hwnd)
-    let (event_loop, window, display, overlay_hwnd) = menu_api::create_overlay(None, "Black Overlay").unwrap();
+    let hwnd = windows_api::grab_game_hwnd("Counter-Strike 2");         // Some(hwnd)
+    let (event_loop, window, display, overlay_hwnd) = menu_api::create_overlay(Some(hwnd), "Black Overlay").unwrap();
 
     let system = rusttype::TextSystem::new(&display);
 

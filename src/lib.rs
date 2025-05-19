@@ -41,8 +41,9 @@ pub fn create_overlay(hwnd: Option<HWND>, overlay_name: &str) ->
     let mut height = window_size.bottom - window_size.top - 40;
     if hwnd.is_some() {
         window_size = windows_api::grab_window_dimensions(hwnd.unwrap());
-        width = window_size.right - window_size.left - 15;
-        height = window_size.bottom - window_size.top - 40;
+        width = window_size.right - window_size.left - 12;
+        height = window_size.bottom - window_size.top - 5;
+        window_size.left += 5;
     }
     // calculating window dimensions
 
