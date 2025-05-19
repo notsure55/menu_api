@@ -383,9 +383,11 @@ impl Menu {
             }
         }
 
-        remove.iter().for_each(|i|{
-            objects.remove(*i);
-        });
+        let mut index = 0;
+        for i in remove {
+            objects.remove(i - index);
+            index += 1;
+        }
 
         self.objects = objects;
 
