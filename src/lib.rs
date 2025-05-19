@@ -301,7 +301,7 @@ impl Rect {
 
 pub struct Menu {
     pub display: Display<WindowSurface>,
-    pub window_size: (u32, u32),
+    pub window_size: (f32, f32),
     pub system: rusttype::TextSystem,
     pub font: rusttype::FontTexture,
     pub handle: HWND,
@@ -333,7 +333,7 @@ impl Menu {
 
         Self {
             display,
-            window_size,
+            window_size: (window_size.0 as f32, window_size.1 as f32),
             system,
             font,
             handle,
