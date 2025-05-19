@@ -2,7 +2,7 @@ extern crate menu_glium_api as menu_api;
 use menu_api::Menu;
 
 use std::io::Error;
-use menu_api::{ windows_api, filled_box, rusttype, check_box, float_slider, label };
+use menu_api::{ windows_api, filled_box, rusttype, check_box, float_slider, label, outline_box };
 use windows::Win32::UI::Input::KeyboardAndMouse::{ GetAsyncKeyState };
 
 use std::cell::RefCell;
@@ -68,8 +68,14 @@ fn build_menu(menu: &mut Menu, black: Rc<RefCell<bool>>, float: Rc<RefCell<f32>>
         "smoothing",
         20.0
     );
+    let fanboy = label::Label::new(
+        menu_api::Vec4::new(1.0, 1.0, 0.0, 1.0),
+        label::Direction::Top,
+        "Fanboy",
+        20.0
+    );
     let check_box = check_box::CheckBox::new(
-        menu_api::MenuOptions::new(true, true),
+        menu_api::MenuOptions::new(true, true, false, true),
         menu_api::Rect::new(menu_api::Vertex { p: [ menu.base.rect.top_left.p[0] + 15.0,
                                                     menu.base.rect.top_left.p[1] + 15.0] }, 30.0, 30.0 ),
         menu_api::Vec4::new(0.0, 1.0, 0.7, 1.0),
@@ -77,7 +83,7 @@ fn build_menu(menu: &mut Menu, black: Rc<RefCell<bool>>, float: Rc<RefCell<f32>>
         Some(esp)
     );
     let filled_box = filled_box::FilledBox::new(
-        menu_api::MenuOptions::new(true, true),
+        menu_api::MenuOptions::new(true, true, false, true),
         menu_api::Rect::new(menu_api::Vertex { p: [ menu.base.rect.top_left.p[0] + 100.0,
                                                     menu.base.rect.top_left.p[1] + 100.0] }, 100.0, 100.0 ),
         menu_api::Vec4::new(1.0, 1.0, 0.7, 1.0),
@@ -89,14 +95,14 @@ fn build_menu(menu: &mut Menu, black: Rc<RefCell<bool>>, float: Rc<RefCell<f32>>
         ))
     );
     let filled_box1 = filled_box::FilledBox::new(
-        menu_api::MenuOptions::new(true, true),
+        menu_api::MenuOptions::new(true, true, false, true),
         menu_api::Rect::new(menu_api::Vertex { p: [ menu.base.rect.top_left.p[0] + 300.0,
                                                     menu.base.rect.top_left.p[1] + 300.0] }, 100.0, 100.0 ),
         menu_api::Vec4::new(1.0, 0.0, 1.0, 1.0),
         None
     );
     let slider = float_slider::FloatSlider::new(
-        menu_api::MenuOptions::new(true, true),
+        menu_api::MenuOptions::new(true, true, false, true),
         menu_api::Rect::new(menu_api::Vertex { p: [ menu.base.rect.top_left.p[0] + 300.0,
                                                     menu.base.rect.top_left.p[1] + 300.0] }, 100.0, 10.0 ),
         menu_api::Vec4::new(1.0, 0.0, 1.0, 1.0),
@@ -105,11 +111,20 @@ fn build_menu(menu: &mut Menu, black: Rc<RefCell<bool>>, float: Rc<RefCell<f32>>
         100.0,
         Some(smoothing)
     );
+    let outline_box = outline_box::OutlineBox::new(
+        menu_api::MenuOptions::new(false, false, false, false),
+        menu_api::Rect::new(menu_api::Vertex { p: [ menu.base.rect.top_left.p[0] + 500.0,
+                                                    menu.base.rect.top_left.p[1] + 500.0] }, 100.0, 100.0 ),
+        menu_api::Vec4::new(1.0, 0.0, 1.0, 1.0),
+        4.0,
+        Some(fanboy)
+    );
 
     menu.add_to_draw_list(menu_api::MenuObject::CheckBox(check_box));
     menu.add_to_draw_list(menu_api::MenuObject::FilledBox(filled_box));
     menu.add_to_draw_list(menu_api::MenuObject::FilledBox(filled_box1));
     menu.add_to_draw_list(menu_api::MenuObject::FloatSlider(slider));
+    menu.add_to_draw_list(menu_api::MenuObject::OutlineBox(outline_box));
 }
 
 fn cheat_loop(menu: &mut Menu) {

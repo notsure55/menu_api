@@ -1,4 +1,4 @@
-use crate::{ Rect, Menu, Vertex, Vec4, Draw, InBounds, Hovering, Clicked, MenuOptions, Options, Draggable };
+use crate::{ Rect, Menu, Vertex, Vec4, Draw, InBounds, Hovering, Clicked, MenuOptions, Options, Draggable, label };
 use glium::{ Surface, uniform, Frame };
 
 pub struct OutlineBox {
@@ -6,15 +6,17 @@ pub struct OutlineBox {
     pub rect: Rect,
     color: Vec4,
     thickness: f32,
+    label: Option<label::Label>,
 }
 
 impl OutlineBox {
-    pub fn new(options: MenuOptions, rect: Rect, color: Vec4, thickness: f32) -> Self {
+    pub fn new(options: MenuOptions, rect: Rect, color: Vec4, thickness: f32, label: Option<label::Label>) -> Self {
         Self {
             options,
             rect,
             color,
             thickness,
+            label,
         }
     }
 }
@@ -143,5 +145,10 @@ impl Draw for OutlineBox {
             &uniforms,
             &params
         ).unwrap();
+
+        match &self.label {
+            Some(label) => label.draw(&self.rect, menu, frame),
+            None => (),
+        };
     }
 }

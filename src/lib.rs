@@ -206,15 +206,19 @@ implement_vertex!(Vertex, p);
 
 #[derive(Default, Copy, Clone)]
 pub struct MenuOptions {
-    draggable: bool,
-    hover: bool,
+    pub draggable: bool,
+    pub hover: bool,
+    pub delete: bool,
+    pub moveable: bool,
 }
 
 impl MenuOptions {
-    pub fn new(draggable: bool, hover: bool) -> Self {
+    pub fn new(draggable: bool, hover: bool, delete: bool, moveable: bool) -> Self {
         Self {
             draggable,
             hover,
+            delete,
+            moveable,
         }
     }
 }
@@ -284,10 +288,11 @@ impl Rect {
         if self.in_bounds(menu) {
             let top_left = Vertex { p: [ self.top_left.p[0] - 2.0, self.top_left.p[1] - 2.0] };
             let mut outline = outline_box::OutlineBox::new(
-                MenuOptions::new(false, false),
+                MenuOptions::new(false, false, false, true),
                 Rect::new(top_left, self.width + 4.0, self.height + 4.0),
                 Vec4::new(1.0, 0.0, 0.0, 1.0),
-                4.0
+                4.0,
+                None
             );
             outline.draw(menu, frame);
         }
@@ -320,7 +325,7 @@ impl Menu {
 
         let window_size = display.get_framebuffer_dimensions();
         let base = filled_box::FilledBox::new(
-            MenuOptions::new(true, true),
+            MenuOptions::new(true, true, false, false),
             Rect::new(Vertex { p: [ 100.0, 100.0] }, base_size.0, base_size.1),
             Vec4::new(0.5, 0.5, 0.5, 1.0),
             None
@@ -358,7 +363,9 @@ impl Menu {
 
         let mut objects = std::mem::take(&mut self.objects);
 
-        for object in objects.iter_mut() {
+        let mut remove = vec![];
+
+        for (i, object) in objects.iter_mut().enumerate() {
             object.draw(self, &mut frame);
 
             object.clicked(self, &mut frame);
@@ -371,7 +378,14 @@ impl Menu {
             if options.hover {
                 object.is_hovering(self, &mut frame);
             }
+            if options.delete {
+                remove.push(i)
+            }
         }
+
+        remove.iter().for_each(|i|{
+            objects.remove(*i);
+        });
 
         self.objects = objects;
 
@@ -429,22 +443,26 @@ impl Menu {
                 base.rect.top_left.p[0] += self.mouse_pos.0 - self.cached_mouse_pos.0;
                 base.rect.top_left.p[1] += self.mouse_pos.1 - self.cached_mouse_pos.1;
                 for object in self.objects.iter_mut() {
-                    match object {
-                        MenuObject::CheckBox(b) => {
-                            b.rect.top_left.p[0] += self.mouse_pos.0 - self.cached_mouse_pos.0;
-                            b.rect.top_left.p[1] += self.mouse_pos.1 - self.cached_mouse_pos.1;
-                        },
-                        MenuObject::OutlineBox(b) => {
-                            b.rect.top_left.p[0] += self.mouse_pos.0 - self.cached_mouse_pos.0;
-                            b.rect.top_left.p[1] += self.mouse_pos.1 - self.cached_mouse_pos.1;
-                        },
-                        MenuObject::FilledBox(b) => {
-                            b.rect.top_left.p[0] += self.mouse_pos.0 - self.cached_mouse_pos.0;
-                            b.rect.top_left.p[1] += self.mouse_pos.1 - self.cached_mouse_pos.1;
-                        },
-                        MenuObject::FloatSlider(b) => {
-                            b.rect.top_left.p[0] += self.mouse_pos.0 - self.cached_mouse_pos.0;
-                            b.rect.top_left.p[1] += self.mouse_pos.1 - self.cached_mouse_pos.1;
+                    let options = object.get_options();
+
+                    if options.moveable {
+                        match object {
+                            MenuObject::CheckBox(b) => {
+                                b.rect.top_left.p[0] += self.mouse_pos.0 - self.cached_mouse_pos.0;
+                                b.rect.top_left.p[1] += self.mouse_pos.1 - self.cached_mouse_pos.1;
+                            },
+                            MenuObject::OutlineBox(b) => {
+                                b.rect.top_left.p[0] += self.mouse_pos.0 - self.cached_mouse_pos.0;
+                                b.rect.top_left.p[1] += self.mouse_pos.1 - self.cached_mouse_pos.1;
+                            },
+                            MenuObject::FilledBox(b) => {
+                                b.rect.top_left.p[0] += self.mouse_pos.0 - self.cached_mouse_pos.0;
+                                b.rect.top_left.p[1] += self.mouse_pos.1 - self.cached_mouse_pos.1;
+                            },
+                            MenuObject::FloatSlider(b) => {
+                                b.rect.top_left.p[0] += self.mouse_pos.0 - self.cached_mouse_pos.0;
+                                b.rect.top_left.p[1] += self.mouse_pos.1 - self.cached_mouse_pos.1;
+                            }
                         }
                     }
                 }
