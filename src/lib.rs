@@ -41,9 +41,9 @@ pub fn create_overlay(hwnd: Option<HWND>, overlay_name: &str) ->
     let mut height = window_size.bottom - window_size.top - 40;
     if hwnd.is_some() {
         window_size = windows_api::grab_window_dimensions(hwnd.unwrap());
-        width = window_size.right - window_size.left - 12;
-        height = window_size.bottom - window_size.top - 5;
-        window_size.left += 5;
+        width = window_size.right - window_size.left - 15;
+        height = window_size.bottom - window_size.top - 35;
+        window_size.left;
     }
     // calculating window dimensions
 
@@ -53,7 +53,7 @@ pub fn create_overlay(hwnd: Option<HWND>, overlay_name: &str) ->
         .with_inner_size(LogicalSize::new(width as f32, height as f32))
         .with_position(Logical(LogicalPosition::new(window_size.left.into(), window_size.top.into())))
         .with_transparent(true)
-        .with_decorations(false)
+        .with_decorations(true)
         .with_window_level(WindowLevel::AlwaysOnTop);
 
     let event_loop = glium::winit::event_loop::EventLoop::builder()
