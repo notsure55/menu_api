@@ -310,7 +310,7 @@ pub struct Menu {
     pub cached_mouse_pos: (f32, f32),
     pub base: filled_box::FilledBox,
     objects: Vec<MenuObject>,
-    clickthrough: bool,
+    pub clickthrough: bool,
     pub clicked: bool,
     pub dragging: bool,
 }

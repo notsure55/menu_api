@@ -94,7 +94,8 @@ fn build_menu(menu: &mut Menu, black: Rc<RefCell<bool>>, float: Rc<RefCell<f32>>
             menu_api::Vec4::new(1.0, 1.0, 0.0, 1.0),
             label::Direction::Left,
             "Fanboy",
-            20.0
+            20.0,
+            10.0
         ))
     );
     let filled_box1 = filled_box::FilledBox::new(
