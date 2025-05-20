@@ -359,7 +359,15 @@ impl Menu {
 
             base.draw(self, &mut frame);
             self.base_dragging(&mut base);
-            base.is_hovering(self, &mut frame);
+            let mut not_hover = false;
+            for object in self.objects.iter() {
+                if object.in_bounds(self) {
+                    not_hover = true;
+                }
+            }
+            if !not_hover {
+                base.is_hovering(self, &mut frame);
+            }
 
             self.base = base;
         }
@@ -441,7 +449,7 @@ impl Menu {
     }
     fn base_dragging(&mut self, base: &mut filled_box::FilledBox) {
         for object in self.objects.iter() {
-            if object.in_bounds(&self) && self.dragging {
+            if object.in_bounds(&self) {
                 return
             }
         }

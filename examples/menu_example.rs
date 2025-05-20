@@ -112,7 +112,7 @@ fn build_menu(menu: &mut Menu, black: Rc<RefCell<bool>>, float: Rc<RefCell<f32>>
         menu_api::Vec4::new(1.0, 0.0, 1.0, 1.0),
         Rc::clone(&float),
         0.0,
-        100.0,
+        1000.0,
         Some(smoothing)
     );
     let outline_box = outline_box::OutlineBox::new(

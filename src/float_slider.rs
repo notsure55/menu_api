@@ -52,14 +52,15 @@ impl FloatSlider {
 
         slider_rect.is_hovering(menu, frame);
         if menu.mouse_pos.0 != menu.cached_mouse_pos.0 || menu.mouse_pos.1 != menu.cached_mouse_pos.1 {
-            // make so we cant move it out of base_me
             let new_x = slider_rect.top_left.p[0] + menu.mouse_pos.0 - menu.cached_mouse_pos.0;
+
             if slider_rect.in_bounds(&menu) && menu.dragging
                 && new_x < self.rect.top_left.p[0] + self.rect.width
                 && new_x > self.rect.top_left.p[0]
             {
                 let mut slider = self.slider.borrow_mut();
-                *slider = new_x - self.rect.top_left.p[0];
+                let normalized = (new_x - self.rect.top_left.p[0]) / self.rect.width;
+                *slider = normalized * self.max;
                 menu.cached_mouse_pos = menu.mouse_pos;
                 *self.holding.borrow_mut() = true;
             }
