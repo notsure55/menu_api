@@ -2,7 +2,7 @@ extern crate menu_glium_api as menu_api;
 use menu_api::Menu;
 
 use std::io::Error;
-use menu_api::{ windows_api, filled_box, rusttype, check_box, float_slider, label, outline_box, line_list, Vertex };
+use menu_api::{ windows_api, filled_box, rusttype, check_box, float_slider, label, outline_box, line_strip, Vertex };
 use windows::Win32::UI::Input::KeyboardAndMouse::{ GetAsyncKeyState };
 
 use std::cell::RefCell;
@@ -38,16 +38,18 @@ fn main() -> Result<(), Error> {
                     menu.mouse_pos = (position.x as f32, position.y as f32);
                 },
                 glium::winit::event::WindowEvent::RedrawRequested => {
-                    let line_list = line_list::LineList::new(
+                    let line_strip = line_strip::LineStrip::new(
                         menu_api::MenuOptions::new(false, false, true, false),
                         vec![
                             Vertex { p: [ 500.0, 500.0 ] },
                             Vertex { p: [ 550.0, 550.0 ] },
+                            Vertex { p: [ 600.0, 400.0 ] },
+                            Vertex { p: [ 400.0, 100.0 ] },
                         ],
                         menu_api::Vec4::new(0.0, 1.0, 1.0, 1.0),
                         10.0
                     );
-                    menu.add_to_draw_list(menu_api::MenuObject::LineList(line_list));
+                    menu.add_to_draw_list(menu_api::MenuObject::LineStrip(line_strip));
                     if *black.borrow() {
                         println!("We are black!");
                     }

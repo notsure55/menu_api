@@ -27,7 +27,7 @@ pub mod outline_box;
 pub mod filled_box;
 pub mod float_slider;
 pub mod label;
-pub mod line_list;
+pub mod line_strip;
 
 pub fn create_overlay(hwnd: Option<HWND>, overlay_name: &str) ->
     Result<(
@@ -132,7 +132,7 @@ impl Draw for MenuObject {
             MenuObject::OutlineBox(b) => b.draw(menu, frame),
             MenuObject::FilledBox(b) => b.draw(menu, frame),
             MenuObject::FloatSlider(b) => b.draw(menu, frame),
-            MenuObject::LineList(b) => b.draw(menu, frame),
+            MenuObject::LineStrip(b) => b.draw(menu, frame),
         }
     }
 }
@@ -187,7 +187,7 @@ impl Options for MenuObject {
             MenuObject::OutlineBox(b) => b.get_options(),
             MenuObject::FilledBox(b) => b.get_options(),
             MenuObject::FloatSlider(b) => b.get_options(),
-            MenuObject::LineList(b) => b.get_options(),
+            MenuObject::LineStrip(b) => b.get_options(),
         }
     }
 }
@@ -236,7 +236,7 @@ pub enum MenuObject {
     FilledBox(filled_box::FilledBox),
     OutlineBox(outline_box::OutlineBox),
     FloatSlider(float_slider::FloatSlider),
-    LineList(line_list::LineList),
+    LineStrip(line_strip::LineStrip),
 }
 
 #[derive(Default)]

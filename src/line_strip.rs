@@ -2,14 +2,14 @@ use crate::{ MenuObject, Rect, Menu, Vertex, Vec4, Draw, InBounds, Hovering, Cli
 
 use glium::{ Surface, uniform, Frame };
 
-pub struct LineList {
+pub struct LineStrip {
     options: MenuOptions,
     vertexs: Vec<Vertex>,
     color: Vec4,
     thickness: f32,
 }
 
-impl LineList {
+impl LineStrip {
     pub fn new(
         options: MenuOptions,
         vertexs: Vec<Vertex>,
@@ -25,13 +25,13 @@ impl LineList {
     }
 }
 
-impl Options for LineList {
+impl Options for LineStrip {
     fn get_options(&self) -> MenuOptions {
         self.options
     }
 }
 
-impl Draw for LineList {
+impl Draw for LineStrip {
     fn draw(
         &mut self,
         menu: &mut Menu,
@@ -43,7 +43,7 @@ impl Draw for LineList {
         };
 
         let vertex_buffer = glium::VertexBuffer::new(&menu.display, &self.vertexs).unwrap();
-        let indices = glium::index::NoIndices(glium::index::PrimitiveType::LinesList);
+        let indices = glium::index::NoIndices(glium::index::PrimitiveType::LineStrip);
 
         let vertex_shader_src = r#"
         #version 140
