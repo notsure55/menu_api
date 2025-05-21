@@ -187,7 +187,7 @@ impl Options for MenuObject {
             MenuObject::OutlineBox(b) => b.get_options(),
             MenuObject::FilledBox(b) => b.get_options(),
             MenuObject::FloatSlider(b) => b.get_options(),
-            _ => MenuOptions::new(false, false, true, false),
+            MenuObject::LineList(b) => b.get_options(),
         }
     }
 }

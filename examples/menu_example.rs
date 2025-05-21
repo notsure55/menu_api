@@ -38,6 +38,16 @@ fn main() -> Result<(), Error> {
                     menu.mouse_pos = (position.x as f32, position.y as f32);
                 },
                 glium::winit::event::WindowEvent::RedrawRequested => {
+                    let line_list = line_list::LineList::new(
+                        menu_api::MenuOptions::new(false, false, true, false),
+                        vec![
+                            Vertex { p: [ 500.0, 500.0 ] },
+                            Vertex { p: [ 550.0, 550.0 ] },
+                        ],
+                        menu_api::Vec4::new(0.0, 1.0, 1.0, 1.0),
+                        10.0
+                    );
+                    menu.add_to_draw_list(menu_api::MenuObject::LineList(line_list));
                     if *black.borrow() {
                         println!("We are black!");
                     }
@@ -123,20 +133,12 @@ fn build_menu(menu: &mut Menu, black: Rc<RefCell<bool>>, float: Rc<RefCell<f32>>
         4.0,
         Some(fanboy)
     );
-    let line_list = line_list::LineList::new(
-        vec![
-            Vertex { p: [ 500.0, 500.0 ] },
-            Vertex { p: [ 550.0, 550.0 ] },
-        ],
-        menu_api::Vec4::new(0.0, 1.0, 1.0, 1.0),
-    );
 
     menu.add_to_draw_list(menu_api::MenuObject::CheckBox(check_box));
     menu.add_to_draw_list(menu_api::MenuObject::FilledBox(filled_box));
     menu.add_to_draw_list(menu_api::MenuObject::FilledBox(filled_box1));
     menu.add_to_draw_list(menu_api::MenuObject::FloatSlider(slider));
     menu.add_to_draw_list(menu_api::MenuObject::OutlineBox(outline_box));
-    menu.add_to_draw_list(menu_api::MenuObject::LineList(line_list));
 }
 
 fn cheat_loop(menu: &mut Menu) {

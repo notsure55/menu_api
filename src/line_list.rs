@@ -3,19 +3,31 @@ use crate::{ MenuObject, Rect, Menu, Vertex, Vec4, Draw, InBounds, Hovering, Cli
 use glium::{ Surface, uniform, Frame };
 
 pub struct LineList {
+    options: MenuOptions,
     vertexs: Vec<Vertex>,
     color: Vec4,
+    thickness: f32,
 }
 
 impl LineList {
     pub fn new(
+        options: MenuOptions,
         vertexs: Vec<Vertex>,
         color: Vec4,
+        thickness: f32
     ) -> Self {
         Self {
+            options,
             vertexs,
             color,
+            thickness,
         }
+    }
+}
+
+impl Options for LineList {
+    fn get_options(&self) -> MenuOptions {
+        self.options
     }
 }
 
@@ -59,14 +71,24 @@ impl Draw for LineList {
         }
         "#;
 
-        let program = glium::Program::from_source(&menu.display, vertex_shader_src, fragment_shader_src, None).unwrap();
+        let params = glium::DrawParameters {
+            line_width: Some(self.thickness),
+            .. Default::default()
+        };
+
+        let program = glium::Program::from_source(
+            &menu.display,
+            vertex_shader_src,
+            fragment_shader_src,
+            None
+        ).unwrap();
 
         frame.draw(
             &vertex_buffer,
             &indices,
             &program,
             &uniforms,
-            &Default::default()
+            &params
         ).unwrap();
     }
 }
