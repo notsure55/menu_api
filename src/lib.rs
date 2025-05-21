@@ -27,6 +27,7 @@ pub mod outline_box;
 pub mod filled_box;
 pub mod float_slider;
 pub mod label;
+pub mod line_list;
 
 pub fn create_overlay(hwnd: Option<HWND>, overlay_name: &str) ->
     Result<(
@@ -131,6 +132,7 @@ impl Draw for MenuObject {
             MenuObject::OutlineBox(b) => b.draw(menu, frame),
             MenuObject::FilledBox(b) => b.draw(menu, frame),
             MenuObject::FloatSlider(b) => b.draw(menu, frame),
+            MenuObject::LineList(b) => b.draw(menu, frame),
         }
     }
 }
@@ -144,6 +146,7 @@ impl InBounds for MenuObject {
             MenuObject::OutlineBox(b) => b.in_bounds(menu),
             MenuObject::FilledBox(b) => b.in_bounds(menu),
             MenuObject::FloatSlider(b) => b.in_bounds(menu),
+            _ => false,
         }
     }
 }
@@ -158,6 +161,7 @@ impl Hovering for MenuObject {
             MenuObject::OutlineBox(b) => b.is_hovering(menu, frame),
             MenuObject::FilledBox(b) => b.is_hovering(menu, frame),
             MenuObject::FloatSlider(b) => b.is_hovering(menu, frame),
+            _ => (),
         }
     }
 }
@@ -172,6 +176,7 @@ impl Clicked for MenuObject {
             MenuObject::OutlineBox(b) => b.clicked(menu, frame),
             MenuObject::FilledBox(b) => b.clicked(menu, frame),
             MenuObject::FloatSlider(b) => b.clicked(menu, frame),
+            _ => false,
         }
     }
 }
@@ -182,6 +187,7 @@ impl Options for MenuObject {
             MenuObject::OutlineBox(b) => b.get_options(),
             MenuObject::FilledBox(b) => b.get_options(),
             MenuObject::FloatSlider(b) => b.get_options(),
+            _ => MenuOptions::new(false, false, false, false),
         }
     }
 }
@@ -195,6 +201,7 @@ impl Draggable for MenuObject {
             MenuObject::OutlineBox(b) => b.is_dragging(menu),
             MenuObject::FilledBox(b) => b.is_dragging(menu),
             MenuObject::FloatSlider(b) => b.is_dragging(menu),
+            _ => (),
         }
     }
 }
@@ -229,7 +236,7 @@ pub enum MenuObject {
     FilledBox(filled_box::FilledBox),
     OutlineBox(outline_box::OutlineBox),
     FloatSlider(float_slider::FloatSlider),
-//    Label(label::Label),
+    LineList(line_list::LineList),
 }
 
 #[derive(Default)]
@@ -478,6 +485,7 @@ impl Menu {
                                 b.rect.top_left.p[0] += self.mouse_pos.0 - self.cached_mouse_pos.0;
                                 b.rect.top_left.p[1] += self.mouse_pos.1 - self.cached_mouse_pos.1;
                             }
+                            _ => (),
                         }
                     }
                 }

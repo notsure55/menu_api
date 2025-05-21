@@ -139,6 +139,7 @@ impl Draggable for CheckBox {
             // make so we cant move it out of base_me
             let new_x = self.rect.top_left.p[0] + menu.mouse_pos.0 - menu.cached_mouse_pos.0;
             let new_y = self.rect.top_left.p[1] + menu.mouse_pos.1 - menu.cached_mouse_pos.1;
+
             if self.in_bounds(&menu) && menu.dragging
                 && new_x < menu.base.rect.top_left.p[0] + menu.base.rect.width - self.rect.width
                 && new_x > menu.base.rect.top_left.p[0]

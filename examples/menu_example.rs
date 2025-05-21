@@ -2,7 +2,7 @@ extern crate menu_glium_api as menu_api;
 use menu_api::Menu;
 
 use std::io::Error;
-use menu_api::{ windows_api, filled_box, rusttype, check_box, float_slider, label, outline_box };
+use menu_api::{ windows_api, filled_box, rusttype, check_box, float_slider, label, outline_box, line_list, Vertex };
 use windows::Win32::UI::Input::KeyboardAndMouse::{ GetAsyncKeyState };
 
 use std::cell::RefCell;
@@ -123,12 +123,20 @@ fn build_menu(menu: &mut Menu, black: Rc<RefCell<bool>>, float: Rc<RefCell<f32>>
         4.0,
         Some(fanboy)
     );
+    let line_list = line_list::LineList::new(
+        vec![
+            Vertex { p: [ 500.0, 500.0 ] },
+            Vertex { p: [ 550.0, 550.0 ] },
+        ],
+        menu_api::Vec4::new(0.0, 1.0, 1.0, 1.0),
+    );
 
     menu.add_to_draw_list(menu_api::MenuObject::CheckBox(check_box));
     menu.add_to_draw_list(menu_api::MenuObject::FilledBox(filled_box));
     menu.add_to_draw_list(menu_api::MenuObject::FilledBox(filled_box1));
     menu.add_to_draw_list(menu_api::MenuObject::FloatSlider(slider));
     menu.add_to_draw_list(menu_api::MenuObject::OutlineBox(outline_box));
+    menu.add_to_draw_list(menu_api::MenuObject::LineList(line_list));
 }
 
 fn cheat_loop(menu: &mut Menu) {
