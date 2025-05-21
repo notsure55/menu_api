@@ -669,7 +669,7 @@ dependencies = [
 
 [[package]]
 name = "menu_glium_api"
-version = "0.1.51"
+version = "0.1.52"
 dependencies = [
  "cgmath",
  "glium",
